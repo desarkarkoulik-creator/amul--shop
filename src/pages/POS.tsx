@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Search, ShoppingCart, IndianRupee, X, CheckCircle2, Plus, Minus } from 'lucide-react'
 import { useOutletContext } from 'react-router-dom'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { Product } from '../App'
 
 // Use Product from App.tsx
@@ -69,11 +71,46 @@ export default function POS() {
         if (cart.length === 0) return;
         setIsCheckingOut(true)
 
+        // Generate PDF receipt locally
+        const doc = new jsPDF()
+        doc.setFontSize(20)
+        doc.text("Amul Shop Receipt", 14, 22)
+        doc.setFontSize(11)
+        doc.text(`Date: ${new Date().toLocaleString()}`, 14, 30)
+        doc.text(`Order: #${Math.floor(1000 + Math.random() * 9000)}`, 14, 36)
+
+        const tableColumn = ["Item", "Qty", "Price", "Total"]
+        const tableRows: any[] = []
+
+        cart.forEach(item => {
+            const rowData = [
+                item.name,
+                item.quantity.toString(),
+                `Rs ${item.price.toFixed(2)}`,
+                `Rs ${(item.quantity * item.price).toFixed(2)}`
+            ]
+            tableRows.push(rowData)
+        })
+
+        const subtotalCalc = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+
+        autoTable(doc, {
+            startY: 45,
+            head: [tableColumn],
+            body: tableRows,
+            foot: [["", "", "Total:", `Rs ${subtotalCalc.toFixed(2)}`]],
+            theme: 'striped',
+            headStyles: { fillColor: [0, 82, 160] }, // Amul Dark Blue
+            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+        })
+
+        doc.save(`amul-receipt-${new Date().getTime()}.pdf`)
+
         // Form items for successful sale
         const saleItems = cart.map((i: CartItem) => ({ id: i.id, quantity: i.quantity }))
 
         // Sync the inventory globally
-        handleSuccessfulSale(subtotal, saleItems)
+        handleSuccessfulSale(subtotalCalc, saleItems)
 
         setTimeout(() => {
             setCart([])
