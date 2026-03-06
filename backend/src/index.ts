@@ -184,9 +184,14 @@ app.get('/api/products', authenticateUser, async (req, res) => {
 app.post('/api/products', authenticateUser, async (req, res) => {
     try {
         const userId = req.user!.id;
+        
+        // Auto-generate SKU if missing, as Prisma schema requires it
+        const sku = req.body.sku || `SKU-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
         const newProduct = await prisma.product.create({
             data: {
                 ...req.body,
+                sku,
                 userId
             }
         });
