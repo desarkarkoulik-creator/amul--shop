@@ -221,9 +221,8 @@ export default function Products() {
                                             {p.category}
                                         </span>
                                         <div className="flex items-center space-x-1.5 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
-                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.stockLevel < 10 ? 'bg-red-500' : p.stockLevel < 30 ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
-                                            <span className={`font-bold text-[10px] whitespace-nowrap ${p.stockLevel < 10 ? 'text-red-700' : p.stockLevel < 30 ? 'text-orange-700' : 'text-gray-700'}`}>
-                                                {p.stockLevel} units
+                                            <span className="font-extrabold text-[10px] text-gray-600">
+                                                {p.stockLevel}
                                             </span>
                                         </div>
                                     </div>
@@ -275,9 +274,8 @@ export default function Products() {
                                         <td className="p-4 font-semibold text-gray-700 text-base pt-4">₹{p.price}</td>
                                         <td className="p-4 pt-4">
                                             <div className="flex items-center space-x-2">
-                                                <div className={`w-2 h-2 rounded-full shrink-0 ${p.stockLevel < 10 ? 'bg-red-500' : p.stockLevel < 30 ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
-                                                <span className={`font-semibold text-sm whitespace-nowrap ${p.stockLevel < 10 ? 'text-red-700' : p.stockLevel < 30 ? 'text-orange-700' : 'text-gray-700'}`}>
-                                                    {p.stockLevel} units
+                                                <span className="text-sm font-extrabold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
+                                                    {p.stockLevel}
                                                 </span>
                                             </div>
                                         </td>
