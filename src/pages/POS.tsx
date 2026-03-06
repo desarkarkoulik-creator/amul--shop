@@ -225,10 +225,10 @@ export default function POS() {
                                         </button>
                                     </div>
                                 </div>
-                                <div className="font-black text-gray-900 flex items-center text-sm xl:text-base">₹{item.price * item.quantity}</div>
+                                <div className="font-black text-gray-900 flex items-center text-sm xl:text-base mr-6 xl:mr-8">₹{item.price * item.quantity}</div>
                                 <button
                                     onClick={() => removeFromCart(item.cartId)}
-                                    className="absolute right-1 top-1 xl:right-2 xl:top-2 p-1 xl:p-1.5 text-gray-400 hover:text-red-500 opacity-100 xl:opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 xl:bg-white rounded-md xl:rounded-lg shadow-sm border border-gray-100 backdrop-blur-sm xl:backdrop-blur-none"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 opacity-100 xl:opacity-0 group-hover:opacity-100 transition-opacity bg-white hover:bg-red-50 rounded-lg shadow-sm border border-gray-100"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
