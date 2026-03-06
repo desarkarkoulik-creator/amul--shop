@@ -191,8 +191,8 @@ app.post('/api/products', authenticateUser, async (req, res) => {
             }
         });
         res.status(201).json(newProduct);
-    } catch (error) {
-        res.status(400).json({ error: 'Failed to create product' });
+    } catch (error: any) {
+        res.status(400).json({ error: 'Failed to create product', details: error.message || String(error) });
     }
 });
 
@@ -211,8 +211,8 @@ app.put('/api/products/:id', authenticateUser, async (req, res) => {
         }
 
         res.json({ message: 'Product updated successfully' });
-    } catch (error) {
-        res.status(400).json({ error: 'Failed to update product' });
+    } catch (error: any) {
+        res.status(400).json({ error: 'Failed to update product', details: error.message || String(error) });
     }
 });
 

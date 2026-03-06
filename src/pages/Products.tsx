@@ -111,7 +111,8 @@ export default function Products() {
                 await refreshData()
                 setIsModalOpen(false)
             } else {
-                alert("Failed to save product. Please try again.")
+                const data = await res.json()
+                alert(`Failed to save product: ${data.error} - ${data.details || ''}`)
             }
         } catch (error) {
             alert("Failed to connect to the server.")
