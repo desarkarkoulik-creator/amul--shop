@@ -4,7 +4,8 @@ import { useOutletContext } from 'react-router-dom'
 import { Product } from '../App'
 
 export default function Inventory() {
-    const { products, setProducts } = useOutletContext<any>()
+    const { products, refreshData } = useOutletContext<any>()
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
     const [activeAction, setActiveAction] = useState<string | null>(null)
     const [selectedProductId, setSelectedProductId] = useState<number | ''>('')
     const [quantity, setQuantity] = useState<number | ''>('')
@@ -17,29 +18,51 @@ export default function Inventory() {
         setShowSuccess(false)
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!selectedProductId || !quantity) return
 
         const qty = Number(quantity)
-        const updatedProducts = products.map((p: Product) => {
-            if (p.id === Number(selectedProductId)) {
-                if (activeAction === 'delivery') {
-                    return { ...p, stock: p.stockLevel + qty }
-                } else if (activeAction === 'audit') {
-                    return { ...p, stock: Math.max(0, p.stockLevel - qty) }
-                }
+        const type = activeAction === 'delivery' ? 'IN' : 'OUT'
+        const reason = activeAction === 'delivery' ? 'Supplier Delivery' : 'Inventory Audit'
+
+        const token = localStorage.getItem('token')
+        if (!token) {
+            alert("No authentication token found. Please login again.")
+            return
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/inventory`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    productId: Number(selectedProductId),
+                    type,
+                    quantity: qty,
+                    reason
+                })
+            })
+
+            if (res.ok) {
+                // Instantly sync dashboard and products from backend
+                await refreshData()
+                setShowSuccess(true)
+                
+                setTimeout(() => {
+                    setActiveAction(null)
+                    setShowSuccess(false)
+                }, 1500)
+            } else {
+                const data = await res.json()
+                alert(`Error: ${data.error}`)
             }
-            return p
-        })
-
-        setProducts(updatedProducts)
-        setShowSuccess(true)
-
-        setTimeout(() => {
-            setActiveAction(null)
-            setShowSuccess(false)
-        }, 1500)
+        } catch (error) {
+            alert('Failed to connect to the server.')
+        }
     }
 
     return (

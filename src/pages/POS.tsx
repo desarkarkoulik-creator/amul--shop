@@ -173,10 +173,12 @@ export default function POS() {
                                 <span className="text-[10px] xl:text-xs font-bold text-amul-darkblue mb-1 flex flex-col xl:flex-row xl:items-center justify-between w-full gap-1 xl:gap-0">
                                     <span className="truncate">{item.name}</span>
                                     {item.stockLevel < 1 ? (
-                                        <span className="text-[8px] xl:text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full w-fit">Out of Stock</span>
+                                        <span className="text-[10px] font-extrabold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                                            0
+                                        </span>
                                     ) : (
-                                        <span className={`text-[8px] xl:text-[10px] px-1.5 py-0.5 rounded-full w-fit font-bold ${item.stockLevel < 10 ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                                            {item.stockLevel} left
+                                        <span className="text-[10px] font-extrabold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                                            {item.stockLevel}
                                         </span>
                                     )}
                                 </span>

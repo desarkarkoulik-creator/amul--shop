@@ -106,7 +106,8 @@ export default function App() {
         setProducts,
         metrics,
         handleSuccessfulSale,
-        handleLogout
+        handleLogout,
+        refreshData: fetchAppData
     }
 
     return (

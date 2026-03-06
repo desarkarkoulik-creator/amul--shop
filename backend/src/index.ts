@@ -236,6 +236,45 @@ app.post('/api/sales', authenticateUser, async (req, res) => {
     }
 });
 
+// 4. Inventory Audit/Delivery
+app.post('/api/inventory', authenticateUser, async (req, res) => {
+    const { productId, type, quantity, reason } = req.body;
+    const userId = req.user!.id;
+
+    if (!productId || !type || !quantity) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            // Create Audit/Delivery Record
+            const transaction = await tx.inventoryTransaction.create({
+                data: {
+                    type,
+                    quantity,
+                    productId,
+                    reason: reason || 'Manual adjustment',
+                    userId
+                }
+            });
+
+            // Update Product Stock
+            const updatedProduct = await tx.product.updateMany({
+                where: { id: productId, userId },
+                data: {
+                    stockLevel: type === 'IN' ? { increment: quantity } : { decrement: quantity }
+                }
+            });
+
+            return transaction;
+        });
+
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: 'Inventory update failed', details: error });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Amul API server running on http://localhost:${PORT}`);
