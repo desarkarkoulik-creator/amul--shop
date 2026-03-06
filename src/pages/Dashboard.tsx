@@ -5,7 +5,7 @@ import { Product } from '../App'
 export default function Dashboard() {
     const { products, metrics } = useOutletContext<any>()
 
-    const lowStockCount = products.filter((p: Product) => p.stock < 10).length
+    const lowStockCount = products.filter((p: Product) => p.stockLevel < 10).length
 
     const stats = [
         { label: "Today's Revenue", value: `₹${metrics.revenue.toFixed(2)}`, icon: IndianRupee, color: "bg-blue-100 text-blue-700", border: 'border-blue-200' },

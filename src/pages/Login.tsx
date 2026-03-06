@@ -44,6 +44,8 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
                 const data = await response.json()
 
                 if (response.ok) {
+                    localStorage.setItem('token', data.token)
+                    localStorage.setItem('user', JSON.stringify(data.user))
                     onLogin()
                     navigate('/dashboard')
                 } else {
@@ -60,11 +62,14 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
                 const data = await response.json()
 
                 if (response.ok) {
-                    setSuccessMsg('Account created successfully! Please sign in.')
+                    localStorage.setItem('token', data.token)
+                    localStorage.setItem('user', JSON.stringify(data.user))
+                    setSuccessMsg('Account created successfully! Logging you in...')
                     setTimeout(() => {
-                        handleSwitchView('login')
+                        onLogin()
+                        navigate('/dashboard')
                         setLoading(false)
-                    }, 2000)
+                    }, 1500)
                 } else {
                     setError(data.error || 'Registration failed.')
                     setLoading(false)

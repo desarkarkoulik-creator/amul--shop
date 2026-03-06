@@ -23,12 +23,12 @@ export default function POS() {
 
     // Add exactly 1 of the product to the cart upon clicking
     const addToCart = (product: Product) => {
-        if (product.stock <= 0) return; // Check if out of stock
+        if (product.stockLevel <= 0) return; // Check if out of stock
         setCart(prev => {
             const existingItem = prev.find(i => i.id === product.id)
             if (existingItem) {
                 // Ensure we do not add more than the product's total inventory stock
-                if (existingItem.quantity >= product.stock) return prev;
+                if (existingItem.quantity >= product.stockLevel) return prev;
                 return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
             }
             const newItem: CartItem = {
@@ -51,7 +51,7 @@ export default function POS() {
         setCart(prev => prev.map(item => {
             if (item.cartId === cartId) {
                 // Ensure quantity cannot go beyond item's original inventory stock limit
-                if (item.quantity >= item.stock) return item;
+                if (item.quantity >= item.stockLevel) return item;
                 return { ...item, quantity: item.quantity + 1 }
             }
             return item
@@ -164,17 +164,17 @@ export default function POS() {
                             <button
                                 key={item.id}
                                 onClick={() => addToCart(item)}
-                                disabled={item.stock <= 0}
-                                className={`p-3 xl:p-4 border border-gray-100 rounded-xl bg-gray-50 hover:bg-blue-50 hover:border-blue-300 transition-all text-left flex flex-col active:scale-95 shadow-sm group ${item.stock <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={item.stockLevel <= 0}
+                                className={`p-3 xl:p-4 border border-gray-100 rounded-xl bg-gray-50 hover:bg-blue-50 hover:border-blue-300 transition-all text-left flex flex-col active:scale-95 shadow-sm group ${item.stockLevel <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <span className="text-[10px] xl:text-xs font-bold text-amul-darkblue mb-1 flex flex-col xl:flex-row xl:items-center justify-between w-full gap-1 xl:gap-0">
                                     <span className="truncate">{item.name}</span>
-                                    {item.stock <= 0 && <span className="text-[8px] xl:text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full w-fit">Out of Stock</span>}
+                                    {item.stockLevel <= 0 && <span className="text-[8px] xl:text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full w-fit">Out of Stock</span>}
                                 </span>
                                 <span className="font-semibold text-gray-800 text-xs xl:text-sm mb-2 xl:mb-3 group-hover:text-amul-darkblue truncate">{item.subname}</span>
                                 <div className="mt-auto flex flex-col xl:flex-row xl:justify-between items-start xl:items-end w-full gap-1 xl:gap-0">
                                     <span className="font-black text-sm xl:text-lg text-gray-900 group-hover:text-blue-900">₹{item.price}</span>
-                                    {item.stock > 0 && <span className="text-[10px] xl:text-xs font-medium text-gray-500">{item.stock} in stock</span>}
+                                    {item.stockLevel > 0 && <span className="text-[10px] xl:text-xs font-medium text-gray-500">{item.stockLevel} in stock</span>}
                                 </div>
                             </button>
                         ))}
@@ -218,7 +218,7 @@ export default function POS() {
                                         <button
                                             type="button"
                                             onClick={(e) => increaseQuantity(item.cartId, e)}
-                                            disabled={item.quantity >= item.stock}
+                                            disabled={item.quantity >= item.stockLevel}
                                             className="p-1 text-gray-600 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                         >
                                             <Plus className="w-4 h-4" />

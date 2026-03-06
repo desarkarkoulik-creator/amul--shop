@@ -1,14 +1,41 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-for-amul-shop';
 
 app.use(cors());
 app.use(express.json());
+
+// Extend Express Request to include user
+declare global {
+    namespace Express {
+        interface Request {
+            user?: { id: number, email: string, role: string };
+        }
+    }
+}
+
+// Authentication Middleware
+const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { id: number, email: string, role: string };
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(403).json({ error: 'Invalid or expired token.' });
+    }
+};
 
 // --- ROUTES ---
 
@@ -35,9 +62,20 @@ app.post('/api/auth/register', async (req, res) => {
             }
         });
 
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: newUser.id, email: newUser.email, role: newUser.role },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
         // Don't send back the password
         const { password: _, ...userWithoutPassword } = newUser;
-        res.status(201).json({ message: 'User registered successfully', user: userWithoutPassword });
+        res.status(201).json({
+            message: 'User registered successfully',
+            user: userWithoutPassword,
+            token
+        });
 
     } catch (error) {
         res.status(500).json({ error: 'Registration failed' });
@@ -58,8 +96,19 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
         const { password: _, ...userWithoutPassword } = user;
-        res.json({ message: 'Login successful', user: userWithoutPassword });
+        res.json({
+            message: 'Login successful',
+            user: userWithoutPassword,
+            token
+        });
 
     } catch (error) {
         res.status(500).json({ error: 'Login failed' });
@@ -67,19 +116,21 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // 1. Dashboard Metrics
-app.get('/api/dashboard', async (req, res) => {
+app.get('/api/dashboard', authenticateUser, async (req, res) => {
     try {
-        const totalProducts = await prisma.product.count();
+        const userId = req.user!.id;
+        const totalProducts = await prisma.product.count({ where: { userId } });
 
         // Quick proxy for total sales
         const salesAggregate = await prisma.sale.aggregate({
             _sum: { totalAmount: true },
-            _count: { id: true }
+            _count: true,
+            where: { userId }
         });
 
         res.json({
-            revenue: salesAggregate._sum.totalAmount || 0,
-            salesCount: salesAggregate._count.id,
+            revenue: salesAggregate._sum?.totalAmount || 0,
+            salesCount: salesAggregate._count || 0,
             totalProducts
         });
     } catch (error) {
@@ -88,19 +139,24 @@ app.get('/api/dashboard', async (req, res) => {
 });
 
 // 2. Product Catalog
-app.get('/api/products', async (req, res) => {
+app.get('/api/products', authenticateUser, async (req, res) => {
     try {
-        const products = await prisma.product.findMany();
+        const userId = req.user!.id;
+        const products = await prisma.product.findMany({ where: { userId } });
         res.json(products);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch products' });
     }
 });
 
-app.post('/api/products', async (req, res) => {
+app.post('/api/products', authenticateUser, async (req, res) => {
     try {
+        const userId = req.user!.id;
         const newProduct = await prisma.product.create({
-            data: req.body
+            data: {
+                ...req.body,
+                userId
+            }
         });
         res.status(201).json(newProduct);
     } catch (error) {
@@ -109,8 +165,9 @@ app.post('/api/products', async (req, res) => {
 });
 
 // 3. POS Process Sale
-app.post('/api/sales', async (req, res) => {
+app.post('/api/sales', authenticateUser, async (req, res) => {
     const { totalAmount, paymentType, items } = req.body;
+    const userId = req.user!.id;
 
     try {
         const result = await prisma.$transaction(async (tx) => {
@@ -119,6 +176,7 @@ app.post('/api/sales', async (req, res) => {
                 data: {
                     totalAmount,
                     paymentType,
+                    userId,
                     items: {
                         create: items.map((item: any) => ({
                             quantity: item.quantity,
@@ -131,8 +189,8 @@ app.post('/api/sales', async (req, res) => {
 
             // Update Inventory Levels (Simple subtraction)
             for (const item of items) {
-                await tx.product.update({
-                    where: { id: item.productId },
+                await tx.product.updateMany({
+                    where: { id: item.productId, userId },
                     data: { stockLevel: { decrement: item.quantity } }
                 });
             }

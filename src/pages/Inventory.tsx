@@ -25,9 +25,9 @@ export default function Inventory() {
         const updatedProducts = products.map((p: Product) => {
             if (p.id === Number(selectedProductId)) {
                 if (activeAction === 'delivery') {
-                    return { ...p, stock: p.stock + qty }
+                    return { ...p, stock: p.stockLevel + qty }
                 } else if (activeAction === 'audit') {
-                    return { ...p, stock: Math.max(0, p.stock - qty) }
+                    return { ...p, stock: Math.max(0, p.stockLevel - qty) }
                 }
             }
             return p
@@ -74,7 +74,7 @@ export default function Inventory() {
                                     >
                                         <option value="" disabled>-- Select an item --</option>
                                         {products.map((p: Product) => (
-                                            <option key={p.id} value={p.id}>{p.name} ({p.stock} currently in stock)</option>
+                                            <option key={p.id} value={p.id}>{p.name} ({p.stockLevel} currently in stock)</option>
                                         ))}
                                     </select>
                                 </div>

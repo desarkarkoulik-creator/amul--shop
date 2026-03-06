@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
@@ -14,48 +14,88 @@ export interface Product {
     subname: string;
     category: string;
     price: number;
-    stock: number;
+    stockLevel: number; // Changed from stock to stockLevel to match DB
 }
 
 export default function App() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'))
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
     // Global App State
-    const [products, setProducts] = useState<Product[]>([
-        { id: 1, name: "Amul Butter", subname: "100g Block", category: "Butter", price: 58, stock: 0 },
-        { id: 2, name: "Amul Taaza Milk", subname: "1L Pouch", category: "Milk", price: 72, stock: 0 },
-        { id: 3, name: "Amul Cheese", subname: "200g Slices", category: "Cheese", price: 125, stock: 0 },
-        { id: 4, name: "Amul Vanilla", subname: "1L Tub", category: "Ice Cream", price: 240, stock: 0 },
-        { id: 5, name: "Amul Kool Kesar", subname: "200ml Bottle", category: "Beverages", price: 25, stock: 0 },
-        { id: 6, name: "Amul Ghee", subname: "1L Pouch", category: "Ghee", price: 620, stock: 0 },
-    ])
+    const [products, setProducts] = useState<Product[]>([])
 
     const [metrics, setMetrics] = useState({
         revenue: 0,
         salesCount: 0
     })
 
-    const handleSuccessfulSale = (total: number, items: { id: number, quantity: number }[]) => {
-        // Decrease inventory
-        const newProducts = products.map(p => {
-            const soldItem = items.find(i => i.id === p.id)
-            if (soldItem) {
-                return { ...p, stock: Math.max(0, p.stock - soldItem.quantity) }
-            }
-            return p
-        })
-        setProducts(newProducts)
+    const fetchAppData = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
 
-        // Increase dashboard metrics
-        setMetrics(prev => ({
-            revenue: prev.revenue + total,
-            salesCount: prev.salesCount + 1
-        }))
+        try {
+            // Fetch products
+            const prodRes = await fetch(`${API_URL}/api/products`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (prodRes.ok) {
+                const data = await prodRes.json();
+                setProducts(data);
+            }
+
+            // Fetch metrics
+            const metricsRes = await fetch(`${API_URL}/api/dashboard`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (metricsRes.ok) {
+                const mData = await metricsRes.json();
+                setMetrics({
+                    revenue: mData.revenue,
+                    salesCount: mData.salesCount
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load user data');
+        }
+    }
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchAppData();
+        }
+    }, [isAuthenticated]);
+
+    const handleSuccessfulSale = async (total: number, items: { id: number, quantity: number }[]) => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        // Post to backend
+        try {
+            await fetch(`${API_URL}/api/sales`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    totalAmount: total,
+                    paymentType: 'CASH', // Default for now
+                    items: items.map(i => ({ productId: i.id, quantity: i.quantity, price: products.find(p => p.id === i.id)?.price || 0 }))
+                })
+            });
+            // Refresh state from DB
+            fetchAppData();
+        } catch (e) {
+            console.error(e)
+        }
     }
 
     const handleLogout = () => {
         setIsAuthenticated(false)
-        // Note: In a real app we'd also clear the specific user token/session from localStorage
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        setProducts([])
+        setMetrics({ revenue: 0, salesCount: 0 })
     }
 
     // Context bundle

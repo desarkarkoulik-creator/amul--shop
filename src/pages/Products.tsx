@@ -110,7 +110,7 @@ export default function Products() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Initial Quantity (Stock)</label>
-                                    <input name="stock" defaultValue={editingProduct?.stock || ''} type="number" min="0" step="1" required placeholder="0" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amul-darkblue/50" />
+                                    <input name="stock" defaultValue={editingProduct?.stockLevel || ''} type="number" min="0" step="1" required placeholder="0" className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amul-darkblue/50" />
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 mt-6">
@@ -239,9 +239,9 @@ export default function Products() {
                                     <td className="p-2 sm:p-4 font-semibold text-gray-700 text-xs sm:text-base pt-3 sm:pt-4">₹{p.price}</td>
                                     <td className="p-2 sm:p-4 pt-3 sm:pt-4">
                                         <div className="flex items-center space-x-1 sm:space-x-2">
-                                            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${p.stock < 10 ? 'bg-red-500' : p.stock < 30 ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
-                                            <span className={`font-semibold text-[10px] sm:text-sm whitespace-nowrap ${p.stock < 10 ? 'text-red-700' : p.stock < 30 ? 'text-orange-700' : 'text-gray-700'}`}>
-                                                {p.stock} <span className="hidden sm:inline">units</span>
+                                            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${p.stockLevel < 10 ? 'bg-red-500' : p.stockLevel < 30 ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
+                                            <span className={`font-semibold text-[10px] sm:text-sm whitespace-nowrap ${p.stockLevel < 10 ? 'text-red-700' : p.stockLevel < 30 ? 'text-orange-700' : 'text-gray-700'}`}>
+                                                {p.stockLevel} <span className="hidden sm:inline">units</span>
                                             </span>
                                         </div>
                                     </td>
