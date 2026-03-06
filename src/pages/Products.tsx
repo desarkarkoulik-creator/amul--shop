@@ -204,67 +204,104 @@ export default function Products() {
                         </button>
                     </div>
                 ) : (
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-md">
-                            <tr className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                <th className="p-2 sm:p-4 pl-3 sm:pl-6">Product</th>
-                                <th className="hidden sm:table-cell p-4">Category</th>
-                                <th className="p-2 sm:p-4">Price</th>
-                                <th className="p-2 sm:p-4">Stock</th>
-                                <th className="p-2 sm:p-4 pr-3 sm:pr-6 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
+                    <>
+                        {/* Mobile View - Card Layout */}
+                        <div className="block sm:hidden divide-y divide-gray-100 pb-20">
                             {filteredProducts.map((p: Product) => (
-                                <tr key={p.id} className="hover:bg-blue-50/50 transition-colors group align-top sm:align-middle">
-                                    <td className="p-2 sm:p-4 pl-3 sm:pl-6">
-                                        <div className="font-bold text-gray-900 group-hover:text-amul-darkblue transition-colors text-xs sm:text-base leading-tight mt-1 sm:mt-0">
-                                            {p.name} {p.subname && <span className="text-gray-500 font-normal hidden sm:inline">({p.subname})</span>}
+                                <div key={p.id} className="p-4 bg-white hover:bg-blue-50/30 transition-colors flex flex-col gap-3">
+                                    <div className="flex justify-between items-start gap-2">
+                                        <div className="max-w-[70%]">
+                                            <div className="font-bold text-gray-900 text-sm leading-tight">{p.name}</div>
+                                            <div className="text-[11px] text-gray-500 mt-0.5">SKU: AMUL-{1000 + p.id} {p.subname && `• ${p.subname}`}</div>
                                         </div>
-                                        <div className="text-[9px] sm:text-xs text-gray-500 mt-1 sm:mt-0.5">
-                                            SKU: AMUL-{1000 + p.id}
-                                            {/* Show category here on mobile since we hide the column */}
-                                            <span className="sm:hidden block mt-1">
-                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-medium bg-gray-100 text-gray-800">
-                                                    {p.category}
-                                                </span>
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="hidden sm:table-cell p-4">
-                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
+                                        <div className="font-black text-lg text-amul-darkblue whitespace-nowrap">₹{p.price}</div>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase tracking-wider">
                                             {p.category}
                                         </span>
-                                    </td>
-                                    <td className="p-2 sm:p-4 font-semibold text-gray-700 text-xs sm:text-base pt-3 sm:pt-4">₹{p.price}</td>
-                                    <td className="p-2 sm:p-4 pt-3 sm:pt-4">
-                                        <div className="flex items-center space-x-1 sm:space-x-2">
-                                            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${p.stockLevel < 10 ? 'bg-red-500' : p.stockLevel < 30 ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
-                                            <span className={`font-semibold text-[10px] sm:text-sm whitespace-nowrap ${p.stockLevel < 10 ? 'text-red-700' : p.stockLevel < 30 ? 'text-orange-700' : 'text-gray-700'}`}>
-                                                {p.stockLevel} <span className="hidden sm:inline">units</span>
+                                        <div className="flex items-center space-x-1.5 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.stockLevel < 10 ? 'bg-red-500' : p.stockLevel < 30 ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
+                                            <span className={`font-bold text-[10px] whitespace-nowrap ${p.stockLevel < 10 ? 'text-red-700' : p.stockLevel < 30 ? 'text-orange-700' : 'text-gray-700'}`}>
+                                                {p.stockLevel} units
                                             </span>
                                         </div>
-                                    </td>
-                                    <td className="p-2 sm:p-4 pr-3 sm:pr-6 text-right w-16 sm:w-auto">
-                                        <div className="flex flex-col sm:flex-row justify-end gap-1 pt-1 sm:pt-0">
-                                            <button
-                                                onClick={() => handleOpenEdit(p)}
-                                                className="text-[10px] sm:text-sm font-medium text-amul-darkblue hover:text-blue-900 hover:underline px-1 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-blue-100 transition-colors w-full text-center"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteProduct(p.id)}
-                                                className="text-[10px] sm:text-sm font-medium text-red-600 hover:text-red-900 hover:underline px-1 py-1 sm:px-3 sm:py-1.5 rounded hover:bg-red-50 transition-colors w-full text-center"
-                                            >
-                                                Del
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    </div>
+                                    <div className="flex gap-2 mt-1">
+                                        <button
+                                            onClick={() => handleOpenEdit(p)}
+                                            className="flex-1 py-2 text-xs font-extrabold text-amul-darkblue bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-xl transition-all active:scale-95"
+                                        >
+                                            Edit Item
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteProduct(p.id)}
+                                            className="flex-1 py-2 text-xs font-extrabold text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 rounded-xl transition-all active:scale-95"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+
+                        {/* Desktop View - Full Table Layout */}
+                        <table className="hidden sm:table w-full text-left border-collapse">
+                            <thead className="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-md">
+                                <tr className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    <th className="p-4 pl-6">Product</th>
+                                    <th className="p-4">Category</th>
+                                    <th className="p-4">Price</th>
+                                    <th className="p-4">Stock</th>
+                                    <th className="p-4 pr-6 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {filteredProducts.map((p: Product) => (
+                                    <tr key={p.id} className="hover:bg-blue-50/50 transition-colors group align-middle">
+                                        <td className="p-4 pl-6">
+                                            <div className="font-bold text-gray-900 group-hover:text-amul-darkblue transition-colors text-base leading-tight mt-0">
+                                                {p.name} {p.subname && <span className="text-gray-500 font-normal">({p.subname})</span>}
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-0.5">
+                                                SKU: AMUL-{1000 + p.id}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
+                                                {p.category}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 font-semibold text-gray-700 text-base pt-4">₹{p.price}</td>
+                                        <td className="p-4 pt-4">
+                                            <div className="flex items-center space-x-2">
+                                                <div className={`w-2 h-2 rounded-full shrink-0 ${p.stockLevel < 10 ? 'bg-red-500' : p.stockLevel < 30 ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
+                                                <span className={`font-semibold text-sm whitespace-nowrap ${p.stockLevel < 10 ? 'text-red-700' : p.stockLevel < 30 ? 'text-orange-700' : 'text-gray-700'}`}>
+                                                    {p.stockLevel} units
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 pr-6 text-right w-auto">
+                                            <div className="flex flex-row justify-end gap-1 pt-0">
+                                                <button
+                                                    onClick={() => handleOpenEdit(p)}
+                                                    className="text-sm font-medium text-amul-darkblue hover:text-blue-900 hover:underline px-3 py-1.5 rounded hover:bg-blue-100 transition-colors text-center"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteProduct(p.id)}
+                                                    className="text-sm font-medium text-red-600 hover:text-red-900 hover:underline px-3 py-1.5 rounded hover:bg-red-50 transition-colors text-center"
+                                                >
+                                                    Del
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </>
                 )}
             </div>
         </div>
