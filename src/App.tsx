@@ -26,7 +26,8 @@ export default function App() {
 
     const [metrics, setMetrics] = useState({
         revenue: 0,
-        salesCount: 0
+        salesCount: 0,
+        monthlyGrowth: 0
     })
 
     const fetchAppData = async () => {
@@ -51,7 +52,8 @@ export default function App() {
                 const mData = await metricsRes.json();
                 setMetrics({
                     revenue: mData.revenue,
-                    salesCount: mData.salesCount
+                    salesCount: mData.salesCount,
+                    monthlyGrowth: mData.monthlyGrowth || 0
                 });
             }
         } catch (error) {
@@ -95,7 +97,7 @@ export default function App() {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         setProducts([])
-        setMetrics({ revenue: 0, salesCount: 0 })
+        setMetrics({ revenue: 0, salesCount: 0, monthlyGrowth: 0 })
     }
 
     // Context bundle

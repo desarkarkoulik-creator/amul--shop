@@ -11,7 +11,7 @@ export default function Dashboard() {
         { label: "Today's Revenue", value: `₹${metrics.revenue.toFixed(2)}`, icon: IndianRupee, color: "bg-blue-100 text-blue-700", border: 'border-blue-200' },
         { label: "Total Sales", value: metrics.salesCount.toString(), icon: ShoppingBag, color: "bg-emerald-100 text-emerald-700", border: 'border-emerald-200' },
         { label: "Low Stock Items", value: lowStockCount.toString(), icon: AlertTriangle, color: "bg-orange-100 text-orange-700", border: 'border-orange-200' },
-        { label: "Monthly Growth", value: metrics.revenue > 0 ? "5.4%" : "0.0%", icon: TrendingUp, color: "bg-purple-100 text-purple-700", border: 'border-purple-200' }
+        { label: "Monthly Growth", value: `${metrics.monthlyGrowth > 0 ? '+' : ''}${metrics.monthlyGrowth || 0}%`, icon: TrendingUp, color: "bg-purple-100 text-purple-700", border: 'border-purple-200' }
     ]
 
     return (

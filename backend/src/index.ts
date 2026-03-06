@@ -121,17 +121,44 @@ app.get('/api/dashboard', authenticateUser, async (req, res) => {
         const userId = req.user!.id;
         const totalProducts = await prisma.product.count({ where: { userId } });
 
-        // Quick proxy for total sales
-        const salesAggregate = await prisma.sale.aggregate({
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+        const totalSalesCount = await prisma.sale.count({ where: { userId } });
+
+        const todaySales = await prisma.sale.aggregate({
             _sum: { totalAmount: true },
-            _count: true,
-            where: { userId }
+            where: { userId, createdAt: { gte: startOfToday } }
         });
 
+        const thisMonthSales = await prisma.sale.aggregate({
+            _sum: { totalAmount: true },
+            where: { userId, createdAt: { gte: startOfThisMonth } }
+        });
+
+        const lastMonthSales = await prisma.sale.aggregate({
+            _sum: { totalAmount: true },
+            where: { userId, createdAt: { gte: startOfLastMonth, lt: startOfThisMonth } }
+        });
+
+        const todayRevenue = todaySales._sum?.totalAmount || 0;
+        const thisMonthRevenue = thisMonthSales._sum?.totalAmount || 0;
+        const lastMonthRevenue = lastMonthSales._sum?.totalAmount || 0;
+
+        let monthlyGrowth = 0;
+        if (lastMonthRevenue > 0) {
+            monthlyGrowth = ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
+        } else if (thisMonthRevenue > 0) {
+            monthlyGrowth = 100;
+        }
+
         res.json({
-            revenue: salesAggregate._sum?.totalAmount || 0,
-            salesCount: salesAggregate._count || 0,
-            totalProducts
+            revenue: todayRevenue,
+            salesCount: totalSalesCount,
+            totalProducts,
+            monthlyGrowth: parseFloat(monthlyGrowth.toFixed(1))
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch dashboard data' });
