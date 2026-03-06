@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Search, ShoppingCart, IndianRupee, X, CheckCircle2, Plus, Minus } from 'lucide-react'
 import { useOutletContext } from 'react-router-dom'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import { Product } from '../App'
 
 // Use Product from App.tsx
@@ -71,40 +69,42 @@ export default function POS() {
         if (cart.length === 0) return;
         setIsCheckingOut(true)
 
-        // Generate PDF receipt locally
-        const doc = new jsPDF()
-        doc.setFontSize(20)
-        doc.text("Amul Shop Receipt", 14, 22)
-        doc.setFontSize(11)
-        doc.text(`Date: ${new Date().toLocaleString()}`, 14, 30)
-        doc.text(`Order: #${Math.floor(1000 + Math.random() * 9000)}`, 14, 36)
+        // Generate TXT receipt locally
+        const timestamp = new Date().toLocaleString()
+        const orderId = Math.floor(1000 + Math.random() * 9000)
 
-        const tableColumn = ["Item", "Qty", "Price", "Total"]
-        const tableRows: any[] = []
-
-        cart.forEach(item => {
-            const rowData = [
-                item.name,
-                item.quantity.toString(),
-                `Rs ${item.price.toFixed(2)}`,
-                `Rs ${(item.quantity * item.price).toFixed(2)}`
-            ]
-            tableRows.push(rowData)
-        })
+        let receiptText = "================================\n"
+        receiptText += "           AMUL SHOP            \n"
+        receiptText += "================================\n"
+        receiptText += `Date: ${timestamp}\n`
+        receiptText += `Order: #${orderId}\n`
+        receiptText += "--------------------------------\n"
 
         const subtotalCalc = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
-        autoTable(doc, {
-            startY: 45,
-            head: [tableColumn],
-            body: tableRows,
-            foot: [["", "", "Total:", `Rs ${subtotalCalc.toFixed(2)}`]],
-            theme: 'striped',
-            headStyles: { fillColor: [0, 82, 160] }, // Amul Dark Blue
-            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+        cart.forEach(item => {
+            // e.g. "Amul Butter x 2          Rs 116"
+            const nameQty = `${item.name} x ${item.quantity}`
+            const priceStr = `Rs ${(item.quantity * item.price).toFixed(2)}`
+            const padding = Math.max(0, 32 - nameQty.length - priceStr.length)
+            receiptText += `${nameQty}${" ".repeat(padding)}${priceStr}\n`
         })
 
-        doc.save(`amul-receipt-${new Date().getTime()}.pdf`)
+        receiptText += "--------------------------------\n"
+        receiptText += `TOTAL:                  Rs ${subtotalCalc.toFixed(2)}\n`
+        receiptText += "================================\n"
+        receiptText += "  Thank you for shopping with us!  \n"
+
+        // Create Blob and trigger download
+        const blob = new Blob([receiptText], { type: 'text/plain' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `amul-receipt-${new Date().getTime()}.txt`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
 
         // Form items for successful sale
         const saleItems = cart.map((i: CartItem) => ({ id: i.id, quantity: i.quantity }))
@@ -255,6 +255,7 @@ export default function POS() {
 
                     <div className="grid grid-cols-2 gap-2 xl:gap-3">
                         <button
+                            onClick={handleCheckout}
                             disabled={cart.length === 0}
                             className="py-3 xl:py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-sm xl:text-base"
                         >
