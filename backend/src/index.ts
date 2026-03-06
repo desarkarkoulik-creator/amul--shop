@@ -196,6 +196,45 @@ app.post('/api/products', authenticateUser, async (req, res) => {
     }
 });
 
+app.put('/api/products/:id', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user!.id;
+        const productId = Number(req.params.id);
+        
+        const updatedProduct = await prisma.product.updateMany({
+            where: { id: productId, userId },
+            data: req.body
+        });
+
+        if (updatedProduct.count === 0) {
+            return res.status(404).json({ error: 'Product not found or unauthorized' });
+        }
+
+        res.json({ message: 'Product updated successfully' });
+    } catch (error) {
+        res.status(400).json({ error: 'Failed to update product' });
+    }
+});
+
+app.delete('/api/products/:id', authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user!.id;
+        const productId = Number(req.params.id);
+
+        const deletedProduct = await prisma.product.deleteMany({
+            where: { id: productId, userId }
+        });
+
+        if (deletedProduct.count === 0) {
+            return res.status(404).json({ error: 'Product not found or unauthorized' });
+        }
+
+        res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+        res.status(400).json({ error: 'Failed to delete product' });
+    }
+});
+
 // 3. POS Process Sale
 app.post('/api/sales', authenticateUser, async (req, res) => {
     const { totalAmount, paymentType, items } = req.body;

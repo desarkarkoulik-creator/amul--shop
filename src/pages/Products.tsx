@@ -5,11 +5,13 @@ import { useOutletContext } from 'react-router-dom'
 import { Product } from '../App'
 
 export default function Products() {
-    const { products: demoProducts, setProducts: setDemoProducts } = useOutletContext<any>()
+    const { products: demoProducts, refreshData } = useOutletContext<any>()
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
     // State for modal
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+    const [isSaving, setIsSaving] = useState(false)
 
     // State for filtering
     const [searchQuery, setSearchQuery] = useState('')
@@ -46,14 +48,33 @@ export default function Products() {
         setIsModalOpen(true)
     }
 
-    const handleDeleteProduct = (id: number) => {
-        if (window.confirm("Are you sure you want to delete this product?")) {
-            setDemoProducts(demoProducts.filter((p: Product) => p.id !== id))
+    const handleDeleteProduct = async (id: number) => {
+        if (!window.confirm("Are you sure you want to delete this product?")) return;
+        
+        const token = localStorage.getItem('token')
+        if (!token) return alert("Please login to delete products.")
+
+        try {
+            const res = await fetch(`${API_URL}/api/products/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+
+            if (res.ok) {
+                await refreshData()
+            } else {
+                alert("Failed to delete product.")
+            }
+        } catch (error) {
+            alert('Failed to connect to the server.')
         }
     }
 
-    const handleSaveProduct = (e: React.FormEvent) => {
+    const handleSaveProduct = async (e: React.FormEvent) => {
         e.preventDefault()
+        const token = localStorage.getItem('token')
+        if (!token) return alert("Please login to save products.")
+
         const form = e.target as HTMLFormElement
         const nameInput = form.elements.namedItem('productName') as HTMLInputElement
         const categoryInput = form.elements.namedItem('category') as HTMLInputElement
@@ -61,24 +82,42 @@ export default function Products() {
         const stockInput = form.elements.namedItem('stock') as HTMLInputElement
 
         const productData = {
-            id: editingProduct ? editingProduct.id : Date.now(),
             name: nameInput.value,
             subname: categoryInput.value ? `${categoryInput.value} Item` : "",
             category: categoryInput.value || "New Segment",
             price: parseFloat(priceInput.value) || 0,
-            stock: parseInt(stockInput.value) || 0
+            stockLevel: parseInt(stockInput.value) || 0
         }
 
-        if (editingProduct) {
-            // Update existing
-            const updatedProducts = demoProducts.map((p: Product) => p.id === editingProduct.id ? productData : p)
-            setDemoProducts(updatedProducts)
-        } else {
-            // Add new
-            setDemoProducts([productData, ...demoProducts])
-        }
+        setIsSaving(true)
 
-        setIsModalOpen(false)
+        try {
+            const endpoint = editingProduct 
+                ? `${API_URL}/api/products/${editingProduct.id}`
+                : `${API_URL}/api/products`
+            
+            const method = editingProduct ? 'PUT' : 'POST'
+
+            const res = await fetch(endpoint, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(productData)
+            })
+
+            if (res.ok) {
+                await refreshData()
+                setIsModalOpen(false)
+            } else {
+                alert("Failed to save product. Please try again.")
+            }
+        } catch (error) {
+            alert("Failed to connect to the server.")
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     return (
@@ -114,9 +153,9 @@ export default function Products() {
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 mt-6">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 font-medium text-gray-600 hover:bg-gray-100 rounded-xl">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-amul-darkblue text-white font-bold rounded-xl hover:bg-blue-800 shadow-md">
-                                    {editingProduct ? 'Save Changes' : 'Add Product'}
+                                <button type="button" onClick={() => setIsModalOpen(false)} disabled={isSaving} className="px-4 py-2 font-medium text-gray-600 hover:bg-gray-100 rounded-xl disabled:opacity-50">Cancel</button>
+                                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-amul-darkblue text-white font-bold rounded-xl hover:bg-blue-800 shadow-md disabled:opacity-50 disabled:cursor-wait">
+                                    {isSaving ? 'Saving...' : editingProduct ? 'Save Changes' : 'Add Product'}
                                 </button>
                             </div>
                         </form>
