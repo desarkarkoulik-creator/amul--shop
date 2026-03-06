@@ -21,21 +21,25 @@ export default function POS() {
 
     // Add exactly 1 of the product to the cart upon clicking
     const addToCart = (product: Product) => {
-        if (product.stockLevel <= 0) return; // Check if out of stock
-        setCart(prev => {
-            const existingItem = prev.find(i => i.id === product.id)
-            if (existingItem) {
-                // Ensure we do not add more than the product's total inventory stock
-                if (existingItem.quantity >= product.stockLevel) return prev;
-                return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
-            }
-            const newItem: CartItem = {
-                ...product,
-                cartId: Math.random().toString(36).substr(2, 9),
-                quantity: 1
-            }
-            return [...prev, newItem]
-        })
+        const existingItem = cart.find(item => item.id === product.id)
+        
+        // Block adding if it exceeds available stock
+        if (existingItem && existingItem.quantity >= product.stockLevel) {
+            alert(`Cannot add more than available stock (${product.stockLevel}).`)
+            return
+        }
+        if (!existingItem && product.stockLevel < 1) {
+            alert("This item is out of stock.")
+            return
+        }
+
+        if (existingItem) {
+            setCart(cart.map(item =>
+                item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+            ))
+        } else {
+            setCart([...cart, { ...product, cartId: Math.random().toString(36).substr(2, 9), quantity: 1 }])
+        }
     }
 
     const removeFromCart = (cartId: string) => {
@@ -158,23 +162,27 @@ export default function POS() {
 
                 {/* Quick Add Grid */}
                 <div className="flex-1 bg-white p-4 xl:p-6 rounded-2xl shadow-sm border border-gray-100 overflow-y-auto">
-                    <h3 className="text-xs xl:text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Fast Moving Items</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-4 gap-3 xl:gap-4">
                         {catalogData.map((item: Product) => (
                             <button
                                 key={item.id}
                                 onClick={() => addToCart(item)}
-                                disabled={item.stockLevel <= 0}
-                                className={`p-3 xl:p-4 border border-gray-100 rounded-xl bg-gray-50 hover:bg-blue-50 hover:border-blue-300 transition-all text-left flex flex-col active:scale-95 shadow-sm group ${item.stockLevel <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={item.stockLevel < 1}
+                                className={`p-3 xl:p-4 border border-gray-100 rounded-xl bg-gray-50 hover:bg-blue-50 hover:border-blue-300 transition-all text-left flex flex-col active:scale-95 shadow-sm group ${item.stockLevel < 1 ? 'opacity-50 cursor-not-allowed filter grayscale' : ''}`}
                             >
                                 <span className="text-[10px] xl:text-xs font-bold text-amul-darkblue mb-1 flex flex-col xl:flex-row xl:items-center justify-between w-full gap-1 xl:gap-0">
                                     <span className="truncate">{item.name}</span>
-                                    {item.stockLevel <= 0 && <span className="text-[8px] xl:text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full w-fit">Out of Stock</span>}
+                                    {item.stockLevel < 1 ? (
+                                        <span className="text-[8px] xl:text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full w-fit">Out of Stock</span>
+                                    ) : (
+                                        <span className={`text-[8px] xl:text-[10px] px-1.5 py-0.5 rounded-full w-fit font-bold ${item.stockLevel < 10 ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                                            {item.stockLevel} left
+                                        </span>
+                                    )}
                                 </span>
                                 <span className="font-semibold text-gray-800 text-xs xl:text-sm mb-2 xl:mb-3 group-hover:text-amul-darkblue truncate">{item.subname}</span>
                                 <div className="mt-auto flex flex-col xl:flex-row xl:justify-between items-start xl:items-end w-full gap-1 xl:gap-0">
                                     <span className="font-black text-sm xl:text-lg text-gray-900 group-hover:text-blue-900">₹{item.price}</span>
-                                    {item.stockLevel > 0 && <span className="text-[10px] xl:text-xs font-medium text-gray-500">{item.stockLevel} in stock</span>}
                                 </div>
                             </button>
                         ))}
