@@ -110,14 +110,17 @@ export default function App() {
     return (
         <Routes>
             <Route path="/login" element={
-                isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login onLogin={() => setIsAuthenticated(true)} />
+                <Login onLogin={() => setIsAuthenticated(true)} />
             } />
 
             {/* Protected Routes */}
             <Route path="/" element={
+                <Navigate to="/login" replace />
+            } />
+
+            <Route element={
                 isAuthenticated ? <Layout appContext={appContext} /> : <Navigate to="/login" replace />
             }>
-                <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="products" element={<Products />} />
                 <Route path="inventory" element={<Inventory />} />
